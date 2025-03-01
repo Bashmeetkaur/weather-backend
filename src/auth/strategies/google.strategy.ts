@@ -1,10 +1,14 @@
 /* eslint-disable prettier/prettier */
-/* eslint-disable @typescript-eslint/no-unused-vars */
-/* eslint-disable prettier/prettier */
-import { Injectable } from '@nestjs/common';
+/* eslint-disable @typescript-eslint/no-unsafe-argument */
+/* eslint-disable @typescript-eslint/no-unsafe-call */
+/* eslint-disable @typescript-eslint/no-unsafe-function-type */
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+
 import { PassportStrategy } from '@nestjs/passport';
-import { Strategy, Profile, VerifyCallback } from 'passport-google-oauth20';
-import { UsersService } from '../../users/users.service'; // Importing UsersService
+import { Strategy, StrategyOptions } from 'passport-google-oauth20';
+import { Injectable } from '@nestjs/common';
+import { UsersService } from '../../users/users.service';
 
 @Injectable()
 export class GoogleStrategy extends PassportStrategy(Strategy, 'google') {
@@ -14,28 +18,25 @@ export class GoogleStrategy extends PassportStrategy(Strategy, 'google') {
       clientSecret: process.env.GOOGLE_CLIENT_SECRET as string,
       callbackURL: process.env.GOOGLE_CALLBACK_URL as string,
       scope: ['email', 'profile'],
-    });
+    } as StrategyOptions); // <-- FIX: Added type assertion
   }
 
-  async validate(
-    accessToken: string,
-    refreshToken: string,
-    profile: Profile,
-    done: VerifyCallback,
-  ): Promise<any> {
-    try {
-      const { name, emails, photos } = profile;
-
-      if (!emails || emails.length === 0) {
-        throw new Error('No email found');
-      }
-
-      // Using UsersService to handle user creation/updating
-      const user = await this.usersService.findOrCreate(profile, accessToken);
-
-      done(null, user);
-    } catch (error) {
-      done(error, false);
+  async validate(accessToken: string, refreshToken: string, profile: any, done: Function): Promise<any> {
+    const { emails, name } = profile;
+    const email = emails[0].value;
+  
+    let user = await this.usersService.findByEmail(email);
+    if (!user) {
+      user = await this.usersService.createUser({
+        email,
+        firstName: name?.givenName,
+        lastName: name?.familyName,
+        name: profile.displayName, // Full name
+        role: 'user',
+        isActive: true,
+      });
     }
+  
+    return done(null, user);
   }
 }

@@ -1,12 +1,14 @@
 /* eslint-disable prettier/prettier */
 import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
-import { User, UserSchema } from './user.schema';
+import { UsersController } from './users.controller';
 import { UsersService } from './users.service';
+import { User, UserSchema } from './user.schema';
 
 @Module({
   imports: [MongooseModule.forFeature([{ name: User.name, schema: UserSchema }])],
+  controllers: [UsersController],
   providers: [UsersService],
-  exports: [UsersService], // <- Make sure this is exported
+  exports: [UsersService], // So Google strategy can use it
 })
 export class UsersModule {}

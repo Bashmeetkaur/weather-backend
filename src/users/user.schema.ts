@@ -1,10 +1,11 @@
 /* eslint-disable prettier/prettier */
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document } from 'mongoose';
+
 export type UserDocument = User & Document;
 
 @Schema()
-export class User extends Document {
+export class User {
   @Prop({ required: true })
   email: string;
 
@@ -14,11 +15,14 @@ export class User extends Document {
   @Prop()
   lastName: string;
 
-  @Prop()
-  picture: string;
+  @Prop({ required: true })
+  name: string; // Full name if needed
 
-  @Prop({ default: 'user' }) // "user" or "admin"
+  @Prop({ default: 'user' })
   role: string;
+
+  @Prop({ default: true })
+  isActive: boolean;
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);
